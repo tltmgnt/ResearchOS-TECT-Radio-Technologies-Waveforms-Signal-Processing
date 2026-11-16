@@ -1,0 +1,1 @@
+import {evaluate} from './model.mjs';self.onmessage=e=>{try{self.postMessage({rows:evaluate(e.data)});}catch(err){self.postMessage({error:err.message});}};

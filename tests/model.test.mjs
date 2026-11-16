@@ -1,0 +1,11 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{evaluate,simulate,validate,rng,wilson,csv}from'../model.mjs';
+const base=()=>({version:1,name:'Test',seed:12345,symbols:20000,ebn0:[0,8,30],phaseDeg:0,source:'Synthetic',review:''});
+test('seeded generator deterministic, open interval',()=>{const a=rng(1),b=rng(1);for(let i=0;i<1000;i++){const x=a();assert.equal(x,b());assert.ok(x>0&&x<1);}});
+test('simulation deterministic',()=>{const s=base();assert.deepEqual(simulate(s,'BPSK',0),simulate(s,'BPSK',0));});
+test('BPSK zero dB reference within broad Monte Carlo tolerance',()=>{const r=simulate(base(),'BPSK',0);assert.ok(r.ber>.06&&r.ber<.10);});
+test('QPSK normalization matches BPSK bit error scale',()=>{const s=base(),a=simulate(s,'BPSK',0),b=simulate(s,'QPSK',0);assert.ok(Math.abs(a.ber-b.ber)<.015);assert.equal(b.bits,40000);});
+test('high SNR and phase inversion',()=>{const s=base();assert.equal(simulate(s,'BPSK',30).errors,0);s.phaseDeg=180;assert.equal(simulate(s,'BPSK',30).errors,s.symbols);});
+test('zero observed errors retains positive upper bound',()=>{const [lo,hi]=wilson(0,100);assert.ok(lo<1e-12);assert.ok(hi>.03&&hi<.04);});
+test('Wilson count validation',()=>{assert.throws(()=>wilson(-1,10));assert.throws(()=>wilson(11,10));assert.throws(()=>wilson(0,0));});
+test('invalid seed, count, sweep, phase rejected',()=>{for(const change of [s=>s.seed=0,s=>s.symbols=1.5,s=>s.ebn0=[NaN],s=>s.ebn0=[],s=>s.phaseDeg=Infinity]){const s=base();change(s);assert.throws(()=>validate(s));}});
+test('evaluation shape, CSV and symbol energy',()=>{const s=base(),rows=evaluate(s);assert.equal(rows.length,6);assert.equal(rows[0].constellation.length,300);assert.equal(csv(rows).split('\r\n').length,7);for(const r of rows){assert.ok(r.interval[0]<=r.ber&&r.ber<=r.interval[1]);assert.ok(r.evmRms>=0);}});

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "name": "Ideal coherent baseband comparison",
+  "seed": 12345,
+  "symbols": 10000,
+  "ebn0": [
+    0,
+    2,
+    4,
+    6,
+    8
+  ],
+  "phaseDeg": 0,
+  "source": "Synthetic unit-energy symbols and Gaussian noise. No RF measurements.",
+  "review": ""
+}
